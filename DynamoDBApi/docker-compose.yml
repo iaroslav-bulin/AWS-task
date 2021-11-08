@@ -1,0 +1,9 @@
+version: "3.8"
+
+services:
+  AWS-Task:
+    image: dynamodbapi
+    container_name: dynamodbapi-service
+    ports:
+      - 80:80
+      - 443:443
