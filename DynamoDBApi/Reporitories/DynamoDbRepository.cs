@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace DynamoDBApi.Reporitories
 {
-    public class DynamoDbRepository : IDynamoDbRepository<Book>
+    public class DynamoDbRepository : IDynamoDbRepository
     {
         private readonly string _isbn = "ISBN";
         private readonly string _title = "Title";

@@ -4,12 +4,12 @@ using System.Threading.Tasks;
 
 namespace DynamoDBApi.Reporitories
 {
-    public interface IDynamoDbRepository<DataModel> where DataModel : Book
+    public interface IDynamoDbRepository
     {
-        public Task<List<DataModel>> GetAll();
-        public Task<DataModel> Get(string id);
-        public Task<DataModel> Create(DataModel model);
-        public Task<DataModel> Update(DataModel model);
+        public Task<List<Book>> GetAll();
+        public Task<Book> Get(string id);
+        public Task<Book> Create(Book model);
+        public Task<Book> Update(Book model);
         public Task Delete(string id);
     }
 }

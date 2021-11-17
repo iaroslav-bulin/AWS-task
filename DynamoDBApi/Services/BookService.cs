@@ -7,9 +7,9 @@ namespace DynamoDBApi.Services
 {
     public class BookService : IBookService
     {
-        private readonly IDynamoDbRepository<Book> _dbRepository;
+        private readonly IDynamoDbRepository _dbRepository;
 
-        public BookService(IDynamoDbRepository<Book> dbRepository)
+        public BookService(IDynamoDbRepository dbRepository)
         {
             _dbRepository = dbRepository;
         }
