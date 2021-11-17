@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 
-namespace SqsLogger
+namespace DynamoDBApi.SqsLogger
 {
     public class Logger : ILogger
     {
@@ -32,9 +32,8 @@ namespace SqsLogger
                 return;
             }
 
-            Console.WriteLine($"{logLevel} - {eventId.Id} - {_name} - {formatter(state, exception)}");
-            // uncomment
-            _sqsService.SendMessage($"{logLevel} - {eventId.Id} - {_name} - {formatter(state, exception)}").Wait();
+            Console.WriteLine($"[{logLevel}] - {_name} - {formatter(state, exception)}");
+            _sqsService.SendMessage($"{logLevel} - {_name} - {formatter(state, exception)}").Wait();
         }
     }
 
@@ -51,10 +50,10 @@ namespace SqsLogger
         private readonly ConcurrentDictionary<string, Logger> _loggers = new ConcurrentDictionary<string, Logger>();
         private readonly SqsService _sqsService;
 
-        public LoggerProvider(LoggerConfig config, string queueUrl, IAmazonSQS sqsClient)
+        public LoggerProvider(LoggerConfig config, string queueName, IAmazonSQS sqsClient)
         {
             _config = config;
-            _sqsService = new SqsService(queueUrl, sqsClient);
+            _sqsService = new SqsService(queueName, sqsClient);
         }
 
         public ILogger CreateLogger(string categoryName)
