@@ -22,7 +22,7 @@
             "memoryReservation": null,
             "volumesFrom": [],
             "stopTimeout": null,
-            "image": "aws-task/DynamoDBApi:latest",
+            "image": "aws-task/aws-task-container:latest",
             "startTimeout": null,
             "firelensConfiguration": null,
             "dependsOn": null,
