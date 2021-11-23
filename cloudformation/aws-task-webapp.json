@@ -1,0 +1,84 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Parameters": {
+        "NetworkStackName": {
+            "Description": "Name of an active CloudFormation stack that contains the networking resources, such as the subnet and security group, that will be used in this stack.",
+            "Type": "String",
+            "MinLength": 1,
+            "MaxLength": 255,
+            "AllowedPattern": "^[a-zA-Z][-a-zA-Z0-9]*$",
+            "Default": "aws-task-infrastructure"
+        }
+    },
+    "Resources": {
+        "EC2WebApp": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "InstanceType": "t2.micro",
+                "ImageId": "ami-0629230e074c580f2",
+                "NetworkInterfaces": [{
+                        "GroupSet": [{
+                                "Fn::ImportValue": {
+                                    "Fn::Sub": "${NetworkStackName}-SecurityGroupID"
+                                }
+                            }
+                        ],
+                        "AssociatePublicIpAddress": "true",
+                        "DeviceIndex": "0",
+                        "DeleteOnTermination": "true",
+                        "SubnetId": {
+                            "Fn::ImportValue": {
+                                "Fn::Sub": "${NetworkStackName}-SubnetID"
+                            }
+                        }
+                    }
+                ],
+                "Tags": [{
+                        "Key": "Name",
+                        "Value": "EC2WebApp"
+                    }
+                ],
+                "KeyName": "aws-ec2-ssh-key"
+            },
+			"DependsOn": [
+                "DynamoTableBooks"
+            ]
+        },
+        "DynamoTableBooks": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+                "KeySchema": [{
+                        "AttributeName": "ISBN",
+                        "KeyType": "HASH"
+                    }
+                ],
+                "AttributeDefinitions": [{
+                        "AttributeName": "ISBN",
+                        "AttributeType": "S"
+                    }
+                ],
+                "ProvisionedThroughput": {
+                    "ReadCapacityUnits": 5,
+                    "WriteCapacityUnits": 5
+                },
+                "Tags": [{
+                        "Key": "Name",
+                        "Value": "DynamoTableBooks"
+                    }
+                ],
+                "TableName": "stack-books"
+            }
+        }
+    },
+    "Outputs": {
+        "URL": {
+            "Description": "URL of the app",
+            "Value": {
+                "Fn::Join": ["", ["http://", {
+                            "Fn::GetAtt": ["EC2WebApp", "PublicDnsName"]
+                        }
+                    ]]
+            }
+        }
+    }
+}
