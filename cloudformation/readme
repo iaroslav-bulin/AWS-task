@@ -1,1 +1,0 @@
-"create-stack.bat" creates AWS stack with name "aws-task-stack" used by github action to deploy code

@@ -1,0 +1,126 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Parameters": {
+        "NetworkStackName": {
+            "Description": "Name of an active CloudFormation stack that contains the networking resources, such as the subnet and security group, that will be used in this stack.",
+            "Type": "String",
+            "MinLength": 1,
+            "MaxLength": 255,
+            "AllowedPattern": "^[a-zA-Z][-a-zA-Z0-9]*$",
+            "Default": "aws-task-infrastructure"
+        }
+    },
+    "Resources": {
+        "EC2WebApp": {
+            "Type": "AWS::EC2::Instance",
+            "Metadata": {
+                "AWS::CloudFormation::Init": {
+                    "configSets": {
+                        "ec2_bootstrap": [
+                            "install_docker"
+                        ]
+                    },
+                    "install_docker": {
+                        "packages": {
+                            "yum": {
+                                "docker": []
+                            }
+                        },
+                        "services": {
+                            "sysvinit": {
+                                "docker": {
+                                    "enabled": "true",
+                                    "ensureRunning": "true"
+                                }
+                            }
+                        },
+                        "commands": {
+                            "docker_for_ec2_user": {
+                                "command": "usermod -G docker ec2-user"
+                            }
+                        }
+                    }
+                }
+            },
+            "Properties": {
+                "InstanceType": "t2.micro",
+                "ImageId": "ami-0d718c3d715cec4a7",
+                "NetworkInterfaces": [{
+                        "GroupSet": [{
+                                "Fn::ImportValue": {
+                                    "Fn::Sub": "${NetworkStackName}-SecurityGroupID"
+                                }
+                            }
+                        ],
+                        "AssociatePublicIpAddress": "true",
+                        "DeviceIndex": "0",
+                        "DeleteOnTermination": "true",
+                        "SubnetId": {
+                            "Fn::ImportValue": {
+                                "Fn::Sub": "${NetworkStackName}-SubnetID"
+                            }
+                        }
+                    }
+                ],
+                "Tags": [{
+                        "Key": "Name",
+                        "Value": "EC2WebApp"
+                    }
+                ],
+                "KeyName": "aws-ec2-ssh-key",
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": ["", [
+                                "#!/bin/bash -xe\n",
+                                "# Get the latest CloudFormation package\n",
+                                "sudo amazon-linux-extras install docker -y\n",
+                                "sudo service docker start \n",
+                                "sudo chmod 777 /var/run/docker.sock\n",
+								"sudo docker pull public.ecr.aws/j5n5x4a2/aws-task:latest\n",
+								"sudo docker run public.ecr.aws/j5n5x4a2/aws-task \n"
+                            ]]
+                    }
+                }
+            },
+            "DependsOn": [
+                "DynamoTableBooks"
+            ]
+        },
+        "DynamoTableBooks": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+                "KeySchema": [{
+                        "AttributeName": "ISBN",
+                        "KeyType": "HASH"
+                    }
+                ],
+                "AttributeDefinitions": [{
+                        "AttributeName": "ISBN",
+                        "AttributeType": "S"
+                    }
+                ],
+                "ProvisionedThroughput": {
+                    "ReadCapacityUnits": 5,
+                    "WriteCapacityUnits": 5
+                },
+                "Tags": [{
+                        "Key": "Name",
+                        "Value": "DynamoTableBooks"
+                    }
+                ],
+                "TableName": "stack-books"
+            }
+        }
+    },
+    "Outputs": {
+        "URL": {
+            "Description": "URL of the app",
+            "Value": {
+                "Fn::Join": ["", ["http://", {
+                            "Fn::GetAtt": ["EC2WebApp", "PublicDnsName"]
+                        }
+                    ]]
+            }
+        }
+    }
+}
