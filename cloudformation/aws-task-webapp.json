@@ -13,9 +13,38 @@
     "Resources": {
         "EC2WebApp": {
             "Type": "AWS::EC2::Instance",
+            "Metadata": {
+                "AWS::CloudFormation::Init": {
+                    "configSets": {
+                        "ec2_bootstrap": [
+                            "install_docker"
+                        ]
+                    },
+                    "install_docker": {
+                        "packages": {
+                            "apt-get": {
+                                "docker": []
+                            }
+                        },
+                        "services": {
+                            "sysvinit": {
+                                "docker": {
+                                    "enabled": "true",
+                                    "ensureRunning": "true"
+                                }
+                            }
+                        },
+                        "commands": {
+                            "docker_for_ec2_user": {
+                                "command": "usermod -G docker ec2-user"
+                            }
+                        }
+                    }
+                }
+            },
             "Properties": {
                 "InstanceType": "t2.micro",
-                "ImageId": "ami-0629230e074c580f2",
+                "ImageId": "ami-0d718c3d715cec4a7",
                 "NetworkInterfaces": [{
                         "GroupSet": [{
                                 "Fn::ImportValue": {
@@ -38,9 +67,26 @@
                         "Value": "EC2WebApp"
                     }
                 ],
-                "KeyName": "aws-ec2-ssh-key"
+                "KeyName": "aws-ec2-ssh-key",
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": ["", [
+                                "#!/bin/bash -xe\n",
+                                "# Get the latest CloudFormation package\n",
+                                "sudo amazon-linux-extras install docker -y\n",
+                                "sudo service docker start \n",
+                                "sudo chmod 777 /var/run/docker.sock\n",
+                                "aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 375297447026.dkr.ecr.us-east-2.amazonaws.com\n",
+                                "sudo docker pull 375297447026.dkr.ecr.us-east-2.amazonaws.com/aws-task:latest\n",
+                                "sudo docker run -p 80:80 375297447026.dkr.ecr.us-east-2.amazonaws.com/aws-task:latest \n"
+                            ]]
+                    }
+                },
+                "IamInstanceProfile": {
+                    "Ref": "EC2WebAppProfile"
+                }
             },
-			"DependsOn": [
+            "DependsOn": [
                 "DynamoTableBooks"
             ]
         },
@@ -67,6 +113,14 @@
                     }
                 ],
                 "TableName": "stack-books"
+            }
+        },
+        "EC2WebAppProfile": {
+            "Type": "AWS::IAM::InstanceProfile",
+            "Properties": {
+                "InstanceProfileName": "demo-ec2-instance-profile",
+                "Path": "/",
+                "Roles": ["EC2Role"]
             }
         }
     },
