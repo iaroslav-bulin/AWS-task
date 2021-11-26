@@ -22,7 +22,7 @@
                     },
                     "install_docker": {
                         "packages": {
-                            "yum": {
+                            "apt-get": {
                                 "docker": []
                             }
                         },
@@ -76,10 +76,14 @@
                                 "sudo amazon-linux-extras install docker -y\n",
                                 "sudo service docker start \n",
                                 "sudo chmod 777 /var/run/docker.sock\n",
-								"sudo docker pull public.ecr.aws/j5n5x4a2/aws-task:latest\n",
-								"sudo docker run public.ecr.aws/j5n5x4a2/aws-task \n"
+                                "aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 375297447026.dkr.ecr.us-east-2.amazonaws.com\n",
+                                "sudo docker pull 375297447026.dkr.ecr.us-east-2.amazonaws.com/aws-task:latest\n",
+                                "sudo docker run -p 80:80 375297447026.dkr.ecr.us-east-2.amazonaws.com/aws-task:latest \n"
                             ]]
                     }
+                },
+                "IamInstanceProfile": {
+                    "Ref": "EC2WebAppProfile"
                 }
             },
             "DependsOn": [
@@ -109,6 +113,14 @@
                     }
                 ],
                 "TableName": "stack-books"
+            }
+        },
+        "EC2WebAppProfile": {
+            "Type": "AWS::IAM::InstanceProfile",
+            "Properties": {
+                "InstanceProfileName": "demo-ec2-instance-profile",
+                "Path": "/",
+                "Roles": ["EC2Role"]
             }
         }
     },
