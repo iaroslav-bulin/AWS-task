@@ -88,8 +88,8 @@
                     }
                 }
             },
-                "DependsOn": [
-                    "DynamoTableBooks"
+            "DependsOn": [
+                "DynamoTableBooks"
             ]
         },
         "DynamoTableBooks": {
