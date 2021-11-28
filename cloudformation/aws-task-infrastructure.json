@@ -129,6 +129,14 @@
                     }
                 }
             }
+        },
+        "EC2WebAppProfile": {
+            "Type": "AWS::IAM::InstanceProfile",
+            "Properties": {
+                "InstanceProfileName": "EC2WebApp-profile",
+                "Path": "/",
+                "Roles": ["EC2Role"]
+            }
         }
     },
     "Outputs": {
@@ -164,6 +172,17 @@
                     "Fn::Sub": "${AWS::StackName}-S3SrcStorage"
                 }
             }
-        }
+        },
+		"EC2WebAppProfile": {
+			"Description": "Webapp profile.",
+			"Value": {
+                "Ref": "EC2WebAppProfile"
+            },
+            "Export": {
+                "Name": {
+                    "Fn::Sub": "${AWS::StackName}-EC2WebAppProfile"
+                }
+            }
+		}
     }
 }

@@ -83,11 +83,13 @@
                     }
                 },
                 "IamInstanceProfile": {
-                    "Ref": "EC2WebAppProfile"
+                    "Fn::ImportValue": {
+                        "Fn::Sub": "${NetworkStackName}-EC2WebAppProfile"
+                    }
                 }
             },
-            "DependsOn": [
-                "DynamoTableBooks"
+                "DependsOn": [
+                    "DynamoTableBooks"
             ]
         },
         "DynamoTableBooks": {
@@ -113,25 +115,6 @@
                     }
                 ],
                 "TableName": "stack-books"
-            }
-        },
-        "EC2WebAppProfile": {
-            "Type": "AWS::IAM::InstanceProfile",
-            "Properties": {
-                "InstanceProfileName": "demo-ec2-instance-profile",
-                "Path": "/",
-                "Roles": ["EC2Role"]
-            }
-        }
-    },
-    "Outputs": {
-        "URL": {
-            "Description": "URL of the app",
-            "Value": {
-                "Fn::Join": ["", ["http://", {
-                            "Fn::GetAtt": ["EC2WebApp", "PublicDnsName"]
-                        }
-                    ]]
             }
         }
     }
